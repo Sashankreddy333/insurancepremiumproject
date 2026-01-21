@@ -72,5 +72,5 @@ def predict_premium(data:patient):
         
     }])
     response=model.predict(data_point)[0]
-    return JSONResponse(status_code=201,content={"message":f"{response} is the category of the user" })
+    return JSONResponse(status_code=201,content={"predicted_category":response })
     
