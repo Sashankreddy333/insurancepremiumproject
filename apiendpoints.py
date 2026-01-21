@@ -4,7 +4,7 @@ from typing import Literal, Annotated, Optional
 import json
 import pickle
 import pandas as pd
-from pydantic.responses import JSONResponse
+from fastapi.responses import JSONResponse
 
 app=FastAPI()
 with open("model.pkl","rb")as f:
@@ -25,7 +25,7 @@ class patient(BaseModel):
     income_lpa:Annotated[float,Field(...,description="income",gt=0)]
     smoker:Annotated[bool,Field(...,description="is Smoker")]
     city:Annotated[str,Field(...,description="city")]
-    occupation:Annotated[str,Field(...,description="occupation of the patient")]
+    occupation:Annotated[Literal['retired', 'freelancer', 'student', 'government_job','business_owner', 'unemployed', 'private_job'],Field(...,description="occupation of the patient")]
     
     @computed_field
     @property
@@ -59,4 +59,18 @@ class patient(BaseModel):
             return 2
         else:
             return 3
+    
+@app.post("/predict")
+def predict_premium(data:patient):
+    data_point=pd.DataFrame([{
+        "income_lpa":data.income_lpa,
+        "occupation":data.occupation,
+        "bmi":data.bmi,
+        "agegroup":data.agegroup,
+        "lifestylerisk":data.lifestylerisk,
+        "city_tier":data.city_tier
+        
+    }])
+    response=model.predict(data_point)[0]
+    return JSONResponse(status_code=201,content={"message":f"{response} is the category of the user" })
     
